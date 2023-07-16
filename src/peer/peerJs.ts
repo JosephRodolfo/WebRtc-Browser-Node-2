@@ -43,6 +43,7 @@ export class ExampleP2PLibrary implements P2PLibrary {
     }
 
     const connection = this.peer.connect(peerId);
+    console.log(connection);
     connection.on("open", () => {
       console.log(`Connected to peer ${peerId} using PeerJS.`);
       this.connections.push(connection);
@@ -78,10 +79,9 @@ export class ExampleP2PLibrary implements P2PLibrary {
     }
   }
 
-  openConnection(callback: () => void): void {
-    callback();
+  openConnection(callback: (dataConnection: DataConnection) => void): void {
     this.peer.on("connection", (data) => {
-      this.onData(data)
+      callback(data)
     });
   }
 
@@ -93,13 +93,14 @@ export class ExampleP2PLibrary implements P2PLibrary {
     this.peer.on("close", callback);
   }
 
-  onData(connection: DataConnection): void {
+  onData(connection: DataConnection, callback: (data: any) => void): void {
     console.log(connection, 'datjkealjjd');
 
     if (connection) {
       console.log('onDataEventListener set up');
       connection.on("data", (data) => {
         console.log('data recieved', data);
+        callback(data);
       });
     } else {
       // console.log(`No active connection to peer ${peerId}.`);

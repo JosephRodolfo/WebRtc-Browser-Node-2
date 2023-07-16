@@ -4,10 +4,16 @@
     <button @click="connect">Connect to peer</button>
     <textarea height="100px" width="100px" v-model="inputText"></textarea>
     <button @click="sendMessage">sendMessage</button>
-    <div>
+    <div class="list-container">
       Connected Peers:
       <ul>
         <li v-for="peer in connectedPeers" :key="peer">{{ peer }}</li>
+      </ul>
+    </div>
+    <div class="list-container">
+      Queue:
+      <ul>
+        <li v-for="item in queuedMessages" :key="item">{{ item }}</li>
       </ul>
     </div>
   </div>
@@ -18,10 +24,12 @@ import { onMounted, ref, computed, watch } from 'vue';
 import { PeerConnector } from './peer/peerConnector';
 import { ExampleP2PLibrary } from './peer/peerJs';
 import { usePeerStore } from './peer/peerStore';
+import { usePubSubStore } from '../src/bus/pubSubStore';
 
 const inputText = ref('');
 const connector = new PeerConnector(new ExampleP2PLibrary());
 const peerStore = usePeerStore();
+const queue = usePubSubStore();
 
 onMounted(() => {
   connector.onConnect(() => {
@@ -31,10 +39,10 @@ onMounted(() => {
     console.log('disconnect firing');
   });
 
-  connector.openConnection(() => {
-    console.log('connection established!')
-  });
-
+  connector.openConnection((data) => {
+    connector.onData(data);
+  })
+  connect();
 });
 
 
@@ -71,6 +79,9 @@ function sendMessage() {
 const connectedPeers = computed(() => {
   return peerStore.peers;
 });
+const queuedMessages = computed(() => {
+  return queue.eventQueue;
+});
 
 </script>
 
@@ -87,4 +98,13 @@ const connectedPeers = computed(() => {
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }
+.list-container {
+  border: 1px solid white;
+  padding: 1em;
+  margin: 1em;
+}
+.list-container ul {
+  list-style: none;
+}
 </style>
+./bus/pubSubStore

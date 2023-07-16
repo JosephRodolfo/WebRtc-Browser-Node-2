@@ -1,4 +1,5 @@
 import { DataConnection } from "peerjs";
+import { usePubSubStore } from "../bus/pubSubStore";
 
 export interface P2PLibrary {
   connect(peerId: string): void;
@@ -6,14 +7,14 @@ export interface P2PLibrary {
   send(peerId: string, data: string): void;
   onConnect(callback: () => void): void;
   onDisconnect(callback: () => void): void;
-  onData(connection: DataConnection): void;
-  openConnection(callback: () => void): void;
-
+  onData(connection: DataConnection, callback: (data: any) => void): void;
+  openConnection(callback: (connection: DataConnection) => void): void;
 }
 
 export class PeerConnector<T extends P2PLibrary> {
 
   private p2pLibrary: T;
+  private pubSubStore = usePubSubStore();
 
   constructor(p2pLibrary: T) {
     this.p2pLibrary = p2pLibrary;
@@ -40,12 +41,12 @@ export class PeerConnector<T extends P2PLibrary> {
   }
 
   onData(connection: DataConnection): void {
-    this.p2pLibrary.onData(connection);
+    this.p2pLibrary.onData(connection, (data: any) => {
+      this.pubSubStore.publish(data);
+    } );
   }
-  openConnection(callback: () => void) {
+
+  openConnection(callback: (connection: DataConnection) => void) {
     this.p2pLibrary.openConnection(callback);
   }
-  // getPeers() {
-  //   return this.peerManagementHelper.getPeers;
-  // }
 }
